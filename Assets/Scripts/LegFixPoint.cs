@@ -6,6 +6,7 @@ public class LegFixPoint : MonoBehaviour
 {
     private void OnTriggerEnter(Collider other)
     {
-        Player.Instance.isLegOpenFinish = true;
+        Player.Instance.isLegFixOpen = true;
+        Player.Instance.isLegOpen = false;
     }
 }

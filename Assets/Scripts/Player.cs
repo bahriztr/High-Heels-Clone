@@ -6,19 +6,22 @@ using DG.Tweening;
 public class Player : MonoBehaviour
 {
     public static Player Instance;
+    public Rigidbody rb;
 
-    public bool isGameStarted = false;
-    public bool isLegOpen = false;
-    public bool isLegFixOpen = false;
-    public bool isLegOpenFinish = true;
-
+    public bool isGameStarted;
+    public bool isLegOpen;
+    public bool isLegFixOpen;
+    public bool isLegOpenFinish;
 
     private float direction = 0f;
     private float startPosx, actualPosx, startPosy, actualPosy;
     private float posValue = 35f;
     public float playerSpeed = 4f;
     public float ikWeight = 0f;
+    public float minX;
+    public float maxX;
 
+    public int diamondScore = 0;
     public int heelCount;
     public int childCount;
 
@@ -48,6 +51,7 @@ public class Player : MonoBehaviour
 
     private void Start()
     {
+        rb = GetComponent<Rigidbody>();
         verticalCollider = GetComponent<BoxCollider>();
     }
 
@@ -81,23 +85,21 @@ public class Player : MonoBehaviour
                 transform.Translate(direction * 1.4f * Time.deltaTime, 0, 0);
             if (direction > 0)
                 transform.Translate(direction * 1.4f * Time.deltaTime, 0, 0);
-
         }
+        transform.position = new Vector3(Mathf.Clamp(transform.position.x, minX, maxX), transform.position.y, transform.position.z);
     }
 
     public void OnAnimatorIK(int layerIndex)
     {
         if (isLegOpen)
         {
-            int x = 0;
-            Sequence sequence = DOTween.Sequence();
-            sequence.Append(DOTween.To(() => ikWeight, x => ikWeight = x, 1, 1));
-            sequence.Append(transform.DOMoveY(transform.position.y - 0.2f, 1f));
-            sequence.Play();
+            float x = 0f;
+            DOTween.To(() => ikWeight, x => ikWeight = x, 1, 3);
+            transform.DOMoveY(transform.position.y - 0.6f, 1f);
             isLegOpen = false;
         }
 
-        if(!isLegOpenFinish)
+        if (!isLegOpenFinish)
         {
             anim.SetIKRotationWeight(AvatarIKGoal.LeftFoot, ikWeight);
             anim.SetIKRotation(AvatarIKGoal.LeftFoot, leftFootIk.rotation);
@@ -111,18 +113,26 @@ public class Player : MonoBehaviour
             verticalCollider.enabled = false;
             horizontalCollider.enabled = true;
         }
+        if(isLegOpenFinish)
+        {
+            verticalCollider.enabled = true;
+        }
 
-        //if (isLegFixOpen)
-        //{
-        //    transform.DOMoveY(transform.position.y + 0.2f, 1f);
-        //    horizontalCollider.enabled = !horizontalCollider.enabled;
-        //    verticalCollider.enabled = true;
-        //    horizontalCollider.enabled = false;
+        if (!isLegOpen)
+        {
+            verticalCollider.enabled = true;
+            horizontalCollider.enabled = false;
+        }
 
-        //    isLegFixOpen = false;
-        //}
-    }
-    public void OnTakeHeel()
+        if (isLegFixOpen)
+        {
+            float x = 1f;
+            DOTween.To(() => ikWeight, x => ikWeight = x, 0, 0.5f);
+            transform.DOMoveY(transform.position.y + 0.6f, 1f);
+            isLegFixOpen = false;
+        }
+}
+        public void OnTakeHeel()
     {
         transform.DOMoveY(transform.position.y + 0.8f, 0.5f);
         if (lastLeftHeel == null)
@@ -177,4 +187,8 @@ public class Player : MonoBehaviour
         transform.DOMoveY(transform.position.y - (0.8f * obstacleCount), 1f);
     }
 
+    public void OnTakeDiamond()
+    {
+        diamondScore++;
+    }
 }
